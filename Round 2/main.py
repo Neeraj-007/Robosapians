@@ -1,65 +1,49 @@
 import cv2
-import numpy as np
 import socket
 import threading
 from utils import *
 import motion1
 import motion2
+import time
 
 dictionary = {'bot1': '10100000000', 'bot2': '10100000000'}
-
+startTime = 0
 
 def cvFunc():
-    global dictionary
+    global dictionary, startTime
     induct = read_data()
     destNo1 = 0
     destNo2 = 0
+    port = [0, 1]
 
     location = {i: [[0, 0] for j in range(5)] for i in range(0, 8)}
+    print(location)
     destination = [{
-        # 'M':[[828,149], [833, 160], [841,40]],
-        'M':[[862,144], [865, 155], [875,32]],
-        
-                    # 'D':[[827,311], [833, 330], [841,40]],
-                    'D':[[862,322], [868, 333], [875,37]],
-                    # 'K':[[829,477], [843, 500], [841,40]],
-                    'K':[[862,495], [879, 506], [875,38]],
-                    # 'C':[[828,149], [820, 190], [841,40]],
-                    'C':[[862,144], [842, 155], [875,38]],
-                    # 'B':[[827,311], [820, 360], [841,40]],
-                    'B':[[862,322], [846, 333], [875,38]],
-                    # 'H':[[829,477], [800, 530], [841,40]],
-                    'H':[[862,495], [853, 506], [875,38]],
-                    # 'P':[[834, 95], [504, 110], [508, 174], [841,40]],
-                    'P':[[874, 91], [524, 98], [525, 507], [875,38]],
-                    # 'A':[[834, 95], [504, 110], [508, 337], [841,40]],
-                    'A':[[874, 91], [524, 98], [525, 334], [875,38]],
-                    # 'J':[[834, 95], [504, 110], [508, 512], [841,40]]},
-                    'J':[[874, 91], [524, 98], [525, 163], [875,38]]},
+                    'M':[[855,144], [870, 167], [870,20]],
+                    'D':[[855,322], [865, 343], [855,20]],
+                    'K':[[855,495], [868, 516], [855,20]],
+                    'C':[[855,144], [845, 155], [865,20]],
+                    'B':[[855,322], [848, 333], [865,20]],
+                    'H':[[855,495], [853, 506], [865,20]],
+                    'P':[[855, 71], [635, 90], [880,25]],
+                    'A':[[855, 71], [495, 100], [495, 325], [880,25]],
+                    'J':[[855, 71], [495, 100], [495, 507], [880,25]]},
                     
                    {
-                    #    'P':[[656,152], [632,151], [659,34]],
-                       'P':[[669,158], [666,163], [659,34]],
-                    # 'A':[[659,312], [633,323], [659,34]],
-                    'A':[[670,326], [666,337], [659,34]],
-                    # 'J':[[661,486], [633,489], [659,34]],
-                    'J':[[672,505], [666,4516], [659,34]],
-                    # 'C':[[656,152], [679,170], [659,34]],
-                    'C':[[669,153], [699,162], [659,34]],
-                    # 'B':[[659,312], [676,342], [659,34]],
-                    'B':[[669,321], [698,334], [659,34]],
-                    # 'H':[[661,486], [680,509], [659,34]],
-                    'H':[[669,500], [703,510], [659,34]],
-                    # 'M':[[682,262], [853,264], [659,34]],
-                    'M':[[702,252], [915,245], [659,34]],
-                    # 'D':[[683,274], [870,294], [659,34]],
-                    'D':[[702,252], [919,282], [659,34]],
-                    # 'K':[[682,262], [979,294], [980,494], [659,34]]}]
-                    'K':[[702,252], [1014,283], [1029,499], [659,34]]}]
+                    'P':[[675,158], [673,177], [655,24]],
+                    'A':[[675,345], [673,348], [645,24]],
+                    'J':[[675,523], [673,533], [645,24]],
+                    'C':[[665,168], [695,175], [655,24]],
+                    'B':[[670,345], [695,350], [645,24]],
+                    'H':[[677,523], [695,535], [645,24]],
+                    'M':[[690,246], [940,265], [650,29]],
+                    'D':[[690,246], [940,265], [645,29]],
+                    'K':[[690,256], [1034,270], [1045,499], [640,29]]}]
 
-    vid = cv2.VideoCapture(0)
+    vid = cv2.VideoCapture(2)
     vid.set(3, 1420)
     vid.set(4, 800)
+    then = time.time()
 
     while True:
         _, frame = vid.read()
@@ -69,38 +53,57 @@ def cvFunc():
 
         corners = [location[i][4] for i in range(4, 8)]
         frame = warp(frame, corners)
-        # print("BOT1 -", induct[0][destNo1][1], location[0][4], end=" ")
+        print("BOT1 -", induct[0][destNo1][1], location[port[0]][4], end=" ")
         dictionary, destNo1 = motion1.move_bot(
-            location, destination[0][induct[0][destNo1][1]], destNo1, dictionary, induct[0][destNo1][1])
+            location, destination[0][induct[0][destNo1][1]], destNo1, dictionary, induct[0][destNo1][1], port[0], destination)
+        now = time.time()
+        print(now - then)
 
-        print("BOT2 -", induct[1][destNo2][1], location[1][4], end=" ")
+        print("BOT2 -", induct[1][destNo2][1], location[port[1]][4], end=" ")
         dictionary, destNo2 = motion2.move_bot(
-            location, destination[1][induct[1][destNo2][1]], destNo2, dictionary, induct[1][destNo2][1])
-        print(dictionary)
+            location, destination[1][induct[1][destNo2][1]], destNo2, dictionary, induct[1][destNo2][1], port[1])
         collision(location,dictionary,induct[1][destNo2][1])
 
-        # print(dictionary, "\n")
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        if startTime:
+            seconds = round (time.time()-startTime,0)
+            minutes = int(seconds // 60)
+            seconds = int(seconds % 60)
+            seconds = '0' * (2-len(str(seconds))) + str(seconds)
+            minutes = '0' * (2-len(str(minutes))) + str(minutes)
+            text = f'Time: {minutes}:{seconds}'
+            if int(minutes) >= 10:
+                text = f'Time: 10:00'
+                dictionary = {'bot1': '10100000000', 'bot2': '10100000000'}
+        else:
+            text = 'Time: 00:00'
+        cv2.putText(frame,text, (500, 65), font, 1.0, (0, 0, 0), 3) # add text on frame
+
+        print(dictionary, "\n")
 
         cv2.imshow('frame', frame)
         cv2.waitKey(1)
 
 
 def socketFunc1():
-    global dictionary
+    global dictionary, startTime
     port = 1111
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('0.0.0.0', port))
     s.listen(0)
+
     while True:
         client, addr = s.accept()
+        if not startTime:
+            startTime = time.time()
         client.settimeout(10)
-        print("BOT1 - ", dictionary['bot1'])
+        # print("BOT1 - ", dictionary['bot1'])
         client.send(bytes(dictionary['bot1'], encoding='utf8'))
         client.close()
 
 
 def socketFunc2():
-    global dictionary
+    global dictionary, startTime
     port = 2222
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('0.0.0.0', port))
@@ -108,8 +111,10 @@ def socketFunc2():
 
     while True:
         client, addr = s.accept()
+        if not startTime:
+            startTime = time.time()
         client.settimeout(10)
-        print("BOT2 - ", dictionary['bot2'])
+        # print("BOT2 - ", dictionary['bot2'])
         client.send(bytes(dictionary['bot2'], encoding='utf8'))
         client.close()
 
@@ -122,4 +127,3 @@ socketThread.start()
 
 cvThread = threading.Thread(target=cvFunc)
 cvThread.start()
-# main coordinates 833,199 first move , second turn 639,199,
