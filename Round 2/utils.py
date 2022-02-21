@@ -1,8 +1,13 @@
-import pandas as pd
+import csv
+import os
+from math import atan2, degrees
+
 import cv2
 import cv2.aruco as aruco
 import numpy as np
-from math import atan2, degrees
+import pandas as pd
+
+from config.definitions import ROOT_DIR
 
 height = 750
 width = 750
@@ -11,10 +16,15 @@ flag = 0
 colDict = []
 
 def read_data():
-    df = pd.read_csv('/home/i_sahajmistry/Robosapians/Round 2/bot1.csv', usecols=['Induct Station', 'Destination'])
+    df = pd.read_csv(os.path.join(ROOT_DIR, 'csv', 'bot1.csv'))
+    columns_titles = ["Induct Station", "Destination", "Shipment"]
+    df=df.reindex(columns=columns_titles)
     induct = [np.array(df)]
-    df = pd.read_csv('/home/i_sahajmistry/Robosapians/Round 2/bot2.csv', usecols=['Induct Station', 'Destination'])
+    # induct=np.array(induct)
+    df = pd.read_csv(os.path.join(ROOT_DIR, 'csv', 'bot2.csv'))
+    df=df.reindex(columns=columns_titles)
     induct.append(np.array(df))
+    # print(induct)    
     
     return induct
 
@@ -50,6 +60,14 @@ def warp(frame, corners):
     M = cv2.getRotationMatrix2D((centerX, centerY), 90, 1.0)
     frame = cv2.warpAffine(frame, M, (width, height))
     return frame
+
+
+def getSpeeds(target, destination, postiton):
+    dist = displacement(destination[target][0], destination[target][1], postiton[0], postiton[1])
+    print(dist)
+    h1 = int(max(min(100, dist//2.3), 40))
+    h2 = int(max(min(100, dist//2.3), 40))
+    return h1, h2
 
 
 def getAngle(location, destination, laut_jao):
