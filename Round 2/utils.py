@@ -65,8 +65,8 @@ def warp(frame, corners):
 def getSpeeds(target, destination, postiton):
     dist = displacement(destination[target][0], destination[target][1], postiton[0], postiton[1])
     print(dist)
-    h1 = int(max(min(100, dist//2.3), 40))
-    h2 = int(max(min(100, dist//2.3), 40))
+    h1 = int(max(min(150, dist//1), 50))
+    h2 = int(max(min(150, dist//1), 50))
     return h1, h2
 
 
@@ -178,9 +178,9 @@ def displacement(x, y, a, b):
     disp = abs(((x - a) ** 2 + (y - b) ** 2) ** (1 / 2))
     return disp
 
-def collision(location,dictionary,letter):
+def collision(location,dictionary,letter, port):
     global flag, colDict
-    distance=displacement(location[0][4][0],location[0][4][1],location[1][4][0],location[1][4][1])
+    distance=displacement(location[port[0]][4][0],location[port[0]][4][1],location[port[1]][4][0],location[port[1]][4][1])
     if(distance>130):
         flag = 0
         return
@@ -188,24 +188,36 @@ def collision(location,dictionary,letter):
     if flag:
         dictionary[colDict[0]] = colDict[1]
 
-    flag = 1
-    if(letter in ['M','D','K']):
-        dist1=displacement(location[0][4][0],location[0][4][1], 833, 264)
-        dist2=displacement(location[1][4][0],location[1][4][1], 833, 264)
-        if(dist1>dist2):
-            dictionary['bot1'] = f'10010000000'
-            colDict = ['bot1', dictionary['bot1']]
-        else:
-            dictionary['bot2'] = f'10010000000'
-            colDict = ['bot2', dictionary['bot2']]
-
     else:
-        dist1=displacement(location[0][4][0],location[0][4][1], 670, 79)
-        dist2=displacement(location[1][4][0],location[1][4][1], 670, 79)
-        if(dist1>dist2):
-            dictionary['bot1'] = f'10010000000'
-            colDict = ['bot1', dictionary['bot1']]
-        else:
-            dictionary['bot2'] = f'10010000000'    
-            colDict = ['bot2', dictionary['bot2']]
+        flag = 1
+        if(letter in ['M','D','K']):
+            dist1=displacement(location[port[0]][4][0],location[port[0]][4][1], 1058, 334)
+            dist2=displacement(location[port[1]][4][0],location[port[1]][4][1], 1058, 334)
+            if(dist1>dist2):
+                colDict = [f'bot{port[0]}', dictionary[f'bot{port[0]}']]
+                dictionary[f'bot{port[0]}'] = f'10010000000'
+            else:
+                dictionary[f'bot{port[1]}'] = f'10010000000'
+                colDict = [f'bot{port[1]}', dictionary[f'bot{port[1]}']]
 
+        else:
+            dist1=displacement(location[port[0]][4][0],location[port[0]][4][1], 828, 120)
+            dist2=displacement(location[port[1]][4][0],location[port[1]][4][1], 828, 120)
+            if(dist1>dist2):
+                dictionary[f'bot{port[0]}'] = f'10010000000'
+                colDict = [f'bot{port[0]}', dictionary[f'bot{port[0]}']]
+            else:
+                dictionary[f'bot{port[1]}'] = f'10010000000'    
+                colDict = [f'bot{port[1]}', dictionary[f'bot{port[1]}']]
+
+def brake(signal):
+    print(signal)
+    signal = list(signal)
+    print(signal)
+    for i in range(4):
+        if signal[i]=='1':
+            signal[i]='0'
+        else:
+            signal[i]='1'
+        t = ''.join(signal)
+    return t
